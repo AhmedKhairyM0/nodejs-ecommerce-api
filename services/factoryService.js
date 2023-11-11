@@ -22,12 +22,12 @@ exports.createOne = (Model) =>
  */
 exports.getAll = (Model) =>
   catchAsync(async (req, res) => {
-    // const docs = await Model.find();
-    const apiFeatures = new APIFeatures(Model.find(), req.query)
+    const filter = req.filterObj || {};
+    const apiFeatures = new APIFeatures(Model.find(filter), req.query)
       .paginate()
       .sort()
       .limitFields();
-      
+
     const docs = await apiFeatures.query;
 
     res.status(200).send({
@@ -77,10 +77,6 @@ exports.updateOne = (Model) =>
     });
   });
 
-/**
- * @desc    Delete a specific resource
- * @route   /{resource}/:id
- */
 exports.deleteOne = (Model) =>
   catchAsync(async (req, res, next) => {
     const { id } = req.params;

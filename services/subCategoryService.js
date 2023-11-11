@@ -1,86 +1,38 @@
-const catchAsync = require("../utils/catchAsync");
 const SubCategory = require("../models/subCategoryModel");
-const ApiError = require("../utils/apiError");
+const factory = require("./factoryService");
 
-exports.createSubCategory = catchAsync(async (req, res, next) => {
-  // /api/v1/categories/:categoryId/subCategory/
-  // /api/v1/subcategories/
 
-  if (req.params.categoryId) req.body.category = req.params.categoryId;
+/**
+ * @description In nested routes, we need to set category id from param to body
+ * to perform the query in `HTTP POST /categories/:categoryId/subcategories`
+ */
+exports.setCategoryIdToBody = (req, res, next) => {
+  if (req.params.categoryId) {
+    req.body.category = req.params.categoryId;
+  }
+  next();
+};
 
-  const { name, image, category } = req.body;
-
-  const subCategory = await SubCategory.create({
-    name,
-    image,
-    category,
-  });
-
-  res.status(201).send({
-    status: "success",
-    subCategory,
-  });
-});
-
-// /api/v1/categories/:categoryId/subCategories/
-// /api/v1/subCategories/
-exports.getSubCategories = catchAsync(async (req, res, next) => {
+/**
+ * @description   In case nested routes, we need to set filter object with `categoryId`
+ * that can use to filter subcategories by category
+ * and this is beneficial in case nested routes `HTTP GET /categories/:categoryId/subcategories`
+ */
+exports.createFilterObject = (req, res, next) => {
   const { categoryId } = req.params;
-
   let filteredQuery = {};
   if (req.params.categoryId) filteredQuery = { category: categoryId };
+  req.filterObj = filteredQuery;
 
-  const subcategories = await SubCategory.find(filteredQuery);
+  next();
+};
 
-  res.status(200).send({
-    status: "success",
+exports.createSubCategory = factory.createOne(SubCategory);
 
-    data: {
-      subcategories,
-    },
-  });
-});
+exports.getSubCategories = factory.getAll(SubCategory);
 
-// /api/v1/categories/:categoryId/subCategories/:id
-// /api/v1/subCategories/:id
-exports.getSubCategory = catchAsync(async (req, res, next) => {
-  const { id } = req.params;
-  const subCategory = await SubCategory.findById(id);
+exports.getSubCategory = factory.getOne(SubCategory);
 
-  if (!subCategory) {
-    return next(new ApiError(`No subCategory with this id: ${id}`, 404));
-  }
-  res.status(200).send({
-    status: "success",
-    subCategory,
-  });
-});
+exports.updateSubCategory = factory.updateOne(SubCategory);
 
-exports.updateSubCategory = catchAsync(async (req, res, next) => {
-  const { id } = req.params;
-
-  const subCategory = await SubCategory.findByIdAndUpdate(id, req.body, {
-    new: true,
-  });
-
-  if (!subCategory) {
-    return next(new ApiError(`No subCategory with this id: ${id}`, 404));
-  }
-  res.status(200).send({
-    status: "success",
-    subCategory,
-  });
-});
-
-exports.deleteSubCategory = catchAsync(async (req, res, next) => {
-  const { id } = req.params;
-  const subCategory = await SubCategory.findByIdAndDelete(id, { new: true });
-
-  if (!subCategory) {
-    return next(new ApiError(`No subCategory with this id: ${id}`, 404));
-  }
-  res.status(204).send({
-    status: "success",
-    subCategory,
-  });
-});
+exports.deleteSubCategory = factory.deleteOne(SubCategory);

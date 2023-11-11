@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const { default: slugify } = require("slugify");
 
 const categorySchema = new mongoose.Schema(
   {
@@ -17,5 +18,15 @@ const categorySchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+const slugifyPreSave = function (next) {
+  this.slug = slugify(this.name, {
+    lower: true,
+    trim: true,
+  });
+  next();
+};
+
+categorySchema.pre("save", slugifyPreSave);
 
 module.exports = mongoose.model("Category", categorySchema);
