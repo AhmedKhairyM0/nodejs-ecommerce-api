@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const slugifyPreSave = require("../middlewares/slugifyPreSave");
 
 const brandSchema = new mongoose.Schema(
   {
@@ -25,5 +26,10 @@ const brandSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+brandSchema.pre("save", function (next) {
+  slugifyPreSave(this.name, this);
+  next();
+});
 
 module.exports = mongoose.model("Brand", brandSchema);

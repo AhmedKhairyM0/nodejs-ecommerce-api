@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const slugifyPreSave = require("../middlewares/slugifyPreSave");
 
 const subCategorySchema = new mongoose.Schema(
   {
@@ -23,5 +24,10 @@ const subCategorySchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+subCategorySchema.pre("save", function (next) {
+  slugifyPreSave(this.name, this);
+  next();
+});
 
 module.exports = mongoose.model("SubCategory", subCategorySchema);

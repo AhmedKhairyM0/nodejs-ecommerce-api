@@ -1,7 +1,6 @@
 const SubCategory = require("../models/subCategoryModel");
 const factory = require("./factoryService");
 
-
 /**
  * @description In nested routes, we need to set category id from param to body
  * to perform the query in `HTTP POST /categories/:categoryId/subcategories`
@@ -27,6 +26,7 @@ exports.createFilterObject = (req, res, next) => {
   next();
 };
 
+// TODO: Check if category id is already exist and not
 exports.createSubCategory = factory.createOne(SubCategory);
 
 exports.getSubCategories = factory.getAll(SubCategory);

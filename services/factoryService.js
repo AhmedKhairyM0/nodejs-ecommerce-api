@@ -4,7 +4,7 @@ const APIFeatures = require("../utils/apiFeatures");
 
 /**
  * @desc    Create a new resource
- * @route   /{resource}/
+ * @route   /resource
  */
 exports.createOne = (Model) =>
   catchAsync(async (req, res) => {
@@ -18,16 +18,20 @@ exports.createOne = (Model) =>
 
 /**
  * @desc    Get a list of resources
- * @route   /{resource}/
+ * @route   /resource
  */
-exports.getAll = (Model) =>
+exports.getAll = (Model, popOption) =>
   catchAsync(async (req, res) => {
     const filter = req.filterObj || {};
     const apiFeatures = new APIFeatures(Model.find(filter), req.query)
+      .filter()
       .paginate()
       .sort()
       .limitFields();
 
+    if (popOption) {
+      apiFeatures.query.populate(popOption);
+    }
     const docs = await apiFeatures.query;
 
     res.status(200).send({
@@ -39,12 +43,16 @@ exports.getAll = (Model) =>
 
 /**
  * @desc    Get a specific resource
- * @route   /{resource}/:id
+ * @route   /resource/:id
  */
-exports.getOne = (Model) =>
+exports.getOne = (Model, popOption) =>
   catchAsync(async (req, res, next) => {
     const { id } = req.params;
-    const doc = await Model.findById(id);
+    const query = Model.findById(id);
+    if (popOption) {
+      query.populate(popOption);
+    }
+    const doc = await query;
 
     if (!doc) {
       return next(new ApiError(`No document with this id: ${id}`, 404));
@@ -58,7 +66,7 @@ exports.getOne = (Model) =>
 
 /**
  * @desc    Update a specific resource
- * @route   /{resource}/:id
+ * @route   /resource/:id
  */
 exports.updateOne = (Model) =>
   catchAsync(async (req, res, next) => {
