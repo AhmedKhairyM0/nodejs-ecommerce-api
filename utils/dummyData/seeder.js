@@ -25,9 +25,9 @@ const importData = async () => {
       fs.readFileSync(path.join(__dirname, "/products.json"))
     );
     await Product.create(products);
-    console.log("Data added successfully!".green.inverse);
+    console.log("Data added successfully!");
   } catch (err) {
-    console.log(`Data Error: ${err}`.red.inverse);
+    console.log(`Data Error: ${err}`);
   }
   process.exit();
 };
@@ -35,9 +35,9 @@ const importData = async () => {
 const deleteData = async () => {
   try {
     await Product.deleteMany();
-    console.log("Data deleted successfully!".green.inverse);
+    console.log("Data deleted successfully!");
   } catch (err) {
-    console.log(`Data Error: ${err}`.red.inverse);
+    console.log(`Data Error: ${err}`);
   }
   process.exit();
 };

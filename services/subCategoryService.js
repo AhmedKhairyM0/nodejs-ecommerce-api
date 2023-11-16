@@ -26,7 +26,6 @@ exports.createFilterObject = (req, res, next) => {
   next();
 };
 
-// TODO: Check if category id is already exist and not
 exports.createSubCategory = factory.createOne(SubCategory);
 
 exports.getSubCategories = factory.getAll(SubCategory);

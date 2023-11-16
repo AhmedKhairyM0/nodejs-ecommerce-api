@@ -30,4 +30,9 @@ subCategorySchema.pre("save", function (next) {
   next();
 });
 
+subCategorySchema.post(/^init|^save/, (doc) => {
+  const imageUrl = `${process.env.BASE_URL}/products/${doc.image}`;
+  doc.image = imageUrl;
+});
+
 module.exports = mongoose.model("SubCategory", subCategorySchema);

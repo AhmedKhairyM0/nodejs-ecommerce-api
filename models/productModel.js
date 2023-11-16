@@ -82,16 +82,9 @@ productSchema.pre("save", function (next) {
   next();
 });
 
-// productSchema.pre("save", async function (next) {
-//   if (
-//     await Category.findById(this.category)
-//     // &&
-//     // (await SubCategory.findById(this.subcategories)) &&
-//     // (await Brand.findById(this.brand))
-//   ) {
-//     next();
-//   }
-//   next(new ApiError("Category, subcategory or brand not found", 400));
-// });
+productSchema.post(/^init|^save/, (doc) => {
+  const imageUrl = `${process.env.BASE_URL}/products/${doc.imageCover}`;
+  doc.imageCover = imageUrl;
+});
 
 module.exports = mongoose.model("Product", productSchema);

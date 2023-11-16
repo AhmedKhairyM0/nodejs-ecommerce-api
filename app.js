@@ -1,3 +1,5 @@
+const path = require("path");
+
 const express = require("express");
 const morgan = require("morgan");
 
@@ -13,6 +15,9 @@ const app = express();
 
 // parser json middleware
 app.use(express.json());
+
+// Serve static files
+app.use(express.static(path.join(__dirname, "uploads")));
 
 // logging middleware
 if (process.env.NODE_ENV === "development") {

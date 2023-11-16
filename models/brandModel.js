@@ -32,4 +32,9 @@ brandSchema.pre("save", function (next) {
   next();
 });
 
+brandSchema.post(/^init|^save/, (doc) => {
+  const imageUrl = `${process.env.BASE_URL}/brands/${doc.image}`;
+  doc.image = imageUrl;
+});
+
 module.exports = mongoose.model("Brand", brandSchema);

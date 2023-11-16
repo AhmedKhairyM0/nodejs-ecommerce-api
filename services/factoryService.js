@@ -27,7 +27,8 @@ exports.getAll = (Model, popOption) =>
       .filter()
       .paginate()
       .sort()
-      .limitFields();
+      .limitFields()
+      // .search();
 
     if (popOption) {
       apiFeatures.query.populate(popOption);

@@ -11,20 +11,6 @@ const checkIfCategoryIsExist = (id) =>
   });
 
 const checkIfSubCategoryIsExist = (ids, { req }) =>
-  // const ex = [];
-  // ids.forEach((id) => {
-  //   SubCategory.findById(id).then((subCategory) => {
-  //     if (!subCategory) {
-  //       ex.push(id);
-  //     }
-  //   });
-  // });
-  // if (ex.length > 0) {
-  //   return Promise.reject(
-  //     new Error(`No subCategories found with that id ${ex.length > 1 || ex.join(" ") && ex.join(" | ")}`)
-  //   );
-  // }
-
   SubCategory.find({ _id: { $in: ids }, category: req.body.category }).then(
     (subs) => {
       if (ids.length !== subs.length) {
