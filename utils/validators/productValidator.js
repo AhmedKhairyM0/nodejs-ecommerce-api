@@ -1,4 +1,5 @@
 const { check } = require("express-validator");
+
 const validatorMiddleware = require("../../middlewares/validatorMiddleware");
 const Category = require("../../models/categoryModel");
 const SubCategory = require("../../models/subCategoryModel");
@@ -78,7 +79,7 @@ exports.createProductValidator = [
   check("subcategories")
     .optional()
     .isMongoId()
-    .withMessage("Invalid Brand id format")
+    .withMessage("Invalid subcategories id format")
     .custom(checkIfSubCategoryIsExist),
 
   check("brand").optional().isMongoId().withMessage("Invalid Brand id format"),

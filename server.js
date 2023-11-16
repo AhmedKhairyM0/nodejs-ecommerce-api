@@ -4,7 +4,7 @@ dotenv.config({ path: "./config.env" });
 
 const dbConnect = require("./config/databaseConnection");
 
-const app = require("./app")
+const app = require("./app");
 
 // Handle uncaught exceptions
 process.on("uncaughtException", (err) => {
@@ -29,3 +29,5 @@ process.on("unhandledRejection", (err) => {
     process.exit(1);
   });
 });
+
+// TODO: Apply i10n

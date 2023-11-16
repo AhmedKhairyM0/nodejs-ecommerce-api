@@ -67,7 +67,7 @@ const productSchema = new mongoose.Schema(
       {
         type: mongoose.Schema.ObjectId,
         ref: "SubCategory",
-        
+
         // required: [true, "Subcategories required"],
       },
     ],
@@ -83,8 +83,17 @@ productSchema.pre("save", function (next) {
 });
 
 productSchema.post(/^init|^save/, (doc) => {
-  const imageUrl = `${process.env.BASE_URL}/products/${doc.imageCover}`;
-  doc.imageCover = imageUrl;
+  const imageCoverUrl = `${process.env.BASE_URL}/products/${doc.imageCover}`;
+  doc.imageCover = imageCoverUrl;
+
+  const imagesUrls = doc.images.map((image) => {
+    const imageUrl = `${process.env.BASE_URL}/products/${image}`;
+    return imageUrl;
+  });
+
+  doc.images = imagesUrls;
 });
+
+// TODO: remove unused images after update or delete for images is complete
 
 module.exports = mongoose.model("Product", productSchema);

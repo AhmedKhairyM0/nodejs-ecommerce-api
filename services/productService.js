@@ -1,25 +1,48 @@
-const multer = require("multer");
 const sharp = require("sharp");
 
-const Product = require("../models/productModel");
-const factory = require("./factoryService");
-const { uploadSingleImage } = require("../middlewares/uploadImageMiddleware");
+const { uploadMixOfImages } = require("../middlewares/uploadImageMiddleware");
 const catchAsync = require("../utils/catchAsync");
+const factory = require("./factoryService");
+const Product = require("../models/productModel");
 
-exports.uploadProductImage = uploadSingleImage("imageCover");
+exports.uploadProductImages = uploadMixOfImages([
+  { name: "imageCover", maxCount: 1 },
+  { name: "images", maxCount: 5 },
+]);
 
 exports.resizeImage = catchAsync(async (req, res, next) => {
-  console.log(req.body);
-  const uniqueSuffix = Math.round(Math.random() * 1e12);
-  const filename = `product-${Date.now()}-${uniqueSuffix}.jpeg`;
+  console.log(req.files);
+  if (req.files && req.files.imageCover) {
+    const uniqueSuffix = Math.round(Math.random() * 1e12);
+    const filename = `product-${Date.now()}-${uniqueSuffix}-cover.jpeg`;
 
-  await sharp(req.file.buffer)
-    .resize(600, 600)
-    .toFormat("jpeg")
-    .jpeg({ quality: 90 })
-    .toFile(`uploads/products/${filename}`);
+    const imageCoverBuffer = req.files.imageCover[0].buffer;
+    await sharp(imageCoverBuffer)
+      .resize(2000, 1333)
+      .toFormat("jpeg")
+      .jpeg({ quality: 90 })
+      .toFile(`uploads/products/${filename}`);
 
-  req.body.imageCover = filename;
+    req.body.imageCover = filename;
+  }
+
+  if (req.files && req.files.images) {
+    const productImages = req.files.images;
+    req.body.images = [];
+    productImages.forEach((image, index) => {
+      const uniqueSuffix = Math.round(Math.random() * 1e12);
+      const filename = `product-${Date.now()}-${uniqueSuffix}-${
+        index + 1
+      }.jpeg`;
+
+      sharp(image.buffer)
+        .resize(600, 600)
+        .toFormat("jpeg")
+        .jpeg({ quality: 90 })
+        .toFile(`uploads/products/${filename}`);
+      req.body.images.push(filename);
+    });
+  }
 
   next();
 });
