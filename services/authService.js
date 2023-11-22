@@ -35,7 +35,7 @@ exports.signup = catchAsync(async (req, res) => {
 exports.login = catchAsync(async (req, res, next) => {
   const { email, password } = req.body;
 
-  const user = await User.findOne({ email });
+  const user = await User.findOne({ email }, { password: 1 });
 
   if (!user || !(await bcrypt.compare(password, user.password))) {
     return next(new ApiError("Incorrect email or password", 401));
@@ -75,7 +75,9 @@ exports.protect = catchAsync(async (req, res, next) => {
     return next(new ApiError("This user is no longer exist", 401));
   }
 
-  console.log(`user.changedPasswordAt: ${user.changedPasswordAt.getTime()}`);
+  console.log(
+    `${parseInt(user.changedPasswordAt.getTime() / 1000, 10)}\n${payload.iat}`
+  );
 
   if (payload.iat < parseInt(user.changedPasswordAt.getTime() / 1000, 10)) {
     return next(
@@ -105,14 +107,14 @@ exports.logout = catchAsync((req, res) => {});
 exports.verifyEmail = catchAsync((req, res) => {});
 
 exports.updatePassword = catchAsync(async (req, res, next) => {
-  // 1. current password for verifying if the user is authenticated
-  const { currentPassword, password, confirmPassword } = req.body;
+  const { currentPassword, newPassword } = req.body;
 
   console.log(req.user);
   const currentUser = await User.findOne(
-    { email: req.user.email }
-    // { password: 1 }
-  ).select("password");
+    { email: req.user.email },
+    { password: 1 }
+  );
+  // .select("password");
 
   const correctPassword = await bcrypt.compare(
     currentPassword,
@@ -123,14 +125,16 @@ exports.updatePassword = catchAsync(async (req, res, next) => {
     return next(new ApiError("Current password is wrong"));
   }
 
-  currentUser.password = password;
+  currentUser.password = newPassword;
   await currentUser.save();
+
+  const token = createToken(currentUser);
 
   res.status(200).send({
     status: "success",
+    token,
     data: currentUser,
   });
-  // User.findOneAndUpdate({ id: req.user.id }, { password, confirmPassword });
 });
 
 exports.forgotPassword = catchAsync((req, res) => {});

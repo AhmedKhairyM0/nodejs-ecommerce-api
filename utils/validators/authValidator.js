@@ -48,9 +48,31 @@ exports.loginValidator = [
     .isEmail()
     .withMessage("Invalid email"),
 
-  check("password")
+  check("password").notEmpty().withMessage("Password is required"),
+
+  validatorMiddleware,
+];
+
+exports.updatePasswordValidator = [
+  check("currentPassword")
     .notEmpty()
-    .withMessage("Password is required"),
-    
+    .withMessage("Current password is required"),
+
+  check("newPassword")
+    .notEmpty()
+    .withMessage("New password is required")
+    .isStrongPassword()
+    .withMessage("Weak password"),
+
+  check("confirmPassword")
+    .notEmpty()
+    .withMessage("Confirm password is required")
+    .custom((confirmPassword, { req }) => {
+      if (confirmPassword !== req.body.newPassword) {
+        return Promise.reject(new Error("The passwords do not match"));
+      }
+      return true;
+    }),
+
   validatorMiddleware,
 ];
