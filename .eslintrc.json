@@ -19,6 +19,7 @@
     "node/no-unsupported-features/es-syntax": "off",
     //////////////////////////////////////////////////////////////// I added
     "import/no-extraneous-dependencies": "off",
-    "node/no-unpublished-require": "off"
+    "node/no-unpublished-require": "off",
+    "new-cap": "off" // constructor lowercase
   }
 }

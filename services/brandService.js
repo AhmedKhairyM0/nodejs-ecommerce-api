@@ -8,17 +8,18 @@ const Brand = require("../models/brandModel");
 exports.uploadBrandImage = uploadSingleImage("image");
 
 exports.resizeImage = catchAsync(async (req, res, next) => {
-  const uniqueSuffix = Math.round(Math.random() * 1e12);
-  const filename = `brand-${Date.now()}-${uniqueSuffix}.jpeg`;
+  if (req.file) {
+    const uniqueSuffix = Math.round(Math.random() * 1e12);
+    const filename = `brand-${Date.now()}-${uniqueSuffix}.jpeg`;
 
-  await sharp(req.file.buffer)
-    .resize(600, 600)
-    .toFormat("jpeg")
-    .jpeg({ quality: 90 })
-    .toFile(`uploads/brands/${filename}`);
+    await sharp(req.file.buffer)
+      .resize(600, 600)
+      .toFormat("jpeg")
+      .jpeg({ quality: 90 })
+      .toFile(`uploads/brands/${filename}`);
 
-  req.body.image = filename;
-
+    req.body.image = filename;
+  }
   next();
 });
 

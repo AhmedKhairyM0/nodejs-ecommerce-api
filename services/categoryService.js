@@ -10,18 +10,19 @@ const Category = require("../models/categoryModel");
 exports.uploadCategoryImage = uploadSingleImage("image");
 
 exports.resizeImage = catchAsync(async (req, res, next) => {
-  console.log(req.body);
-  const uniqueSuffix = Math.round(Math.random() * 1e12);
-  const filename = `category-${Date.now()}-${uniqueSuffix}.jpeg`;
+  if (req.file) {
+    console.log(req.body);
+    const uniqueSuffix = Math.round(Math.random() * 1e12);
+    const filename = `category-${Date.now()}-${uniqueSuffix}.jpeg`;
 
-  await sharp(req.file.buffer)
-    .resize(600, 600)
-    .toFormat("jpeg")
-    .jpeg({ quality: 90 })
-    .toFile(`uploads/categories/${filename}`);
+    await sharp(req.file.buffer)
+      .resize(600, 600)
+      .toFormat("jpeg")
+      .jpeg({ quality: 90 })
+      .toFile(`uploads/categories/${filename}`);
 
-  req.body.image = filename;
-
+    req.body.image = filename;
+  }
   next();
 });
 

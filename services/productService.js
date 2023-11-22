@@ -11,7 +11,6 @@ exports.uploadProductImages = uploadMixOfImages([
 ]);
 
 exports.resizeImage = catchAsync(async (req, res, next) => {
-  console.log(req.files);
   if (req.files && req.files.imageCover) {
     const uniqueSuffix = Math.round(Math.random() * 1e12);
     const filename = `product-${Date.now()}-${uniqueSuffix}-cover.jpeg`;
