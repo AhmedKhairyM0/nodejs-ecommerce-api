@@ -40,7 +40,7 @@ exports.signup = catchAsync(async (req, res) => {
 exports.login = catchAsync(async (req, res, next) => {
   const { email, password } = req.body;
 
-  const user = await User.findOne({ email }, { password: 1 });
+  const user = await User.findOne({ email }).select("+password");
 
   if (!user || !(await bcrypt.compare(password, user.password))) {
     return next(new ApiError("Incorrect email or password", 401));
@@ -70,7 +70,7 @@ exports.protect = catchAsync(async (req, res, next) => {
     return next(new ApiError("Invalid token format", 401));
   }
 
-  const payload = await verifyToken();
+  const payload = await verifyToken(token);
 
   const user = await User.findById(payload.id);
   if (!user) {

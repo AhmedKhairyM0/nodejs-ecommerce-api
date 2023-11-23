@@ -35,9 +35,28 @@ const filterAllows = (req, ...allowedFields) => {
   return filterObj;
 };
 
-// users/updateMe/:id
-exports.updateMe = catchAsync(async (req, res, next) => {
-  const { id } = req.params;
+/*
+ * @desc    Get logged user data
+ * @route   /api/v1/users/me
+ * @access  Private
+ */
+exports.getUserData = catchAsync(async (req, res, next) => {
+  const { id } = req.user;
+  const user = await User.findById(id);
+
+  res.status(200).send({
+    status: "success",
+    data: user,
+  });
+});
+
+/*
+ * @desc    Update logged user data
+ * @route   /api/v1/users/me
+ * @access  Private
+ */
+exports.updateUserData = catchAsync(async (req, res, next) => {
+  const { id } = req.user;
   const filterObj = filterAllows(req, "name", "email", "phone", "profileImage");
 
   const user = await User.findByIdAndUpdate(id, filterObj, { new: true });

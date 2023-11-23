@@ -6,6 +6,8 @@ const {
   getUser,
   updateUser,
   deleteUser,
+  getUserData,
+  updateUserData,
   uploadUserImage,
   resizeImage,
 } = require("../services/userService");
@@ -16,9 +18,15 @@ const authService = require("../services/authService");
 
 const router = express.Router();
 
-// router.use(authService.protect, authService.restrictedTo("admin"));
+router.use(authService.protect);
+
+router
+  .route("/me")
+  .get(getUserData)
+  .patch(uploadUserImage, resizeImage, updateUserData);
 
 // routes for admin
+// router.use(authService.restrictedTo("admin"));
 router
   .route("/")
   .post(
