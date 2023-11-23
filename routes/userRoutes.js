@@ -8,33 +8,37 @@ const {
   deleteUser,
   uploadUserImage,
   resizeImage,
-  updateMe,
 } = require("../services/userService");
-
-const {
-  signup,
-  login,
-  protect: isAuthenticated,
-} = require("../services/authService");
 
 const { createUserValidator } = require("../utils/validators/userValidator");
 
-const router = express.Router();
+const authService = require("../services/authService");
 
-// router.post("/signup", createUserValidator, signup);
-// router.post("/login", login);
-// router.patch("/updateMe/:id", uploadUserImage, resizeImage, updateMe);
+const router = express.Router();
 
 // routes for admin
 router
   .route("/")
-  .post(uploadUserImage, resizeImage, createUserValidator, createUser)
-  .get(getUsers);
+  .post(
+    authService.protect,
+    authService.restrictedTo("admin"),
+    uploadUserImage,
+    resizeImage,
+    createUserValidator,
+    createUser
+  )
+  .get(authService.protect, authService.restrictedTo("admin"), getUsers);
 
 router
   .route("/:id")
-  .get(getUser)
-  .patch(uploadUserImage, resizeImage, updateUser)
-  .delete(deleteUser);
+  .get(authService.protect, authService.restrictedTo("admin"), getUser)
+  .patch(
+    authService.protect,
+    authService.restrictedTo("admin"),
+    uploadUserImage,
+    resizeImage,
+    updateUser
+  )
+  .delete(authService.protect, authService.restrictedTo("admin"), deleteUser);
 
 module.exports = router;
