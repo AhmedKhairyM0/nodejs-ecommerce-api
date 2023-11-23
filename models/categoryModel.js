@@ -26,8 +26,10 @@ categorySchema.pre("save", function (next) {
 });
 
 categorySchema.post(/^init|^save/, (doc) => {
-  const imageUrl = `${process.env.BASE_URL}/categories/${doc.image}`;
-  doc.image = imageUrl;
+  if (doc.image) {
+    const imageUrl = `${process.env.BASE_URL}/categories/${doc.image}`;
+    doc.image = imageUrl;
+  }
 });
 
 module.exports = mongoose.model("Category", categorySchema);
