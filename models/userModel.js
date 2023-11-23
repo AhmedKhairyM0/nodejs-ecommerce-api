@@ -36,7 +36,7 @@ const userSchema = new mongoose.Schema(
     active: {
       type: Boolean,
       default: true,
-      select: false,
+      // select: false,
     },
     verified: {
       type: Boolean,
@@ -64,6 +64,17 @@ userSchema.post(/^init|^save/, (doc) => {
     const imageURL = `${process.env.BASE_URL}/users/${doc.profileImage}`;
     doc.profileImage = imageURL;
   }
+
+  if (!doc.active) {
+    // eslint-disable-next-line no-delete-var
+    doc = {};
+    console.log(doc);
+  }
+});
+
+userSchema.pre(/^.*/, function (next) {
+  this.find({ active: true });
+  next();
 });
 
 module.exports = mongoose.model("User", userSchema);

@@ -36,47 +36,80 @@ const filterAllows = (req, ...allowedFields) => {
 };
 
 /*
+ * @desc    Create user
+ * @route   /api/v1/users
+ * @access  Private/Admin
+ */
+exports.createUser = factory.createOne(User);
+
+/*
+ * @desc    Get list of the users
+ * @route   /api/v1/users
+ * @access  Private/Admin
+ */
+exports.getUsers = factory.getAll(User);
+
+/*
+ * @desc    Get Specific User
+ * @route   /api/v1/users/:id
+ * @access  Private/Admin
+ */
+exports.getUser = factory.getOne(User);
+
+/*
+ * @desc    Update any data for specific User
+ * @route   /api/v1/users/:id
+ * @access  Private/Admin
+ */
+exports.updateUser = factory.updateOne(User);
+
+/*
+ * @desc    Delete User
+ * @route   /api/v1/users/:id
+ * @access  Private/Admin
+ */
+exports.deleteUser = factory.deleteOne(User);
+
+/*
  * @desc    Get logged user data
  * @route   /api/v1/users/me
- * @access  Private
+ * @access  Private/Protect
  */
 exports.getUserData = catchAsync(async (req, res, next) => {
-  const { id } = req.user;
-  const user = await User.findById(id);
-
-  res.status(200).send({
-    status: "success",
-    data: user,
-  });
+  req.params.id = req.user.id;
+  next();
 });
 
 /*
  * @desc    Update logged user data
  * @route   /api/v1/users/me
- * @access  Private
+ * @access  Private/Protect
  */
 exports.updateUserData = catchAsync(async (req, res, next) => {
-  const { id } = req.user;
-  const filterObj = filterAllows(req, "name", "email", "phone", "profileImage");
-
-  const user = await User.findByIdAndUpdate(id, filterObj, { new: true });
-
-  if (!user) {
-    return next(new ApiError("No found User with that id"));
-  }
-
-  res.status(200).send({
-    status: "success",
-    data: user,
-  });
+  req.params.id = req.user.id;
+  req.body = filterAllows(req, "name", "email", "phone", "profileImage");
+  next();
 });
 
-exports.createUser = factory.createOne(User);
+/*
+ * @desc    Soft Delete or Deactivate user account
+ * @route   /api/v1/users/deactivate
+ * @access  Private/Protect
+ */
+exports.deactivateUser = catchAsync(async (req, res, next) => {
+  const { id } = req.user;
+  const user = await User.findByIdAndUpdate(
+    id,
+    { active: false },
+    { new: true }
+  );
 
-exports.getUsers = factory.getAll(User);
+  if (!user) {
+    return next(new ApiError(`No User found with this id: ${id}`, 404));
+  }
 
-exports.getUser = factory.getOne(User);
-
-exports.updateUser = factory.updateOne(User);
-
-exports.deleteUser = factory.deleteOne(User);
+  res.status(204).send({
+    status: "success",
+    data: null,
+  });
+});

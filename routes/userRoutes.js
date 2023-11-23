@@ -8,6 +8,7 @@ const {
   deleteUser,
   getUserData,
   updateUserData,
+  deactivateUser,
   uploadUserImage,
   resizeImage,
 } = require("../services/userService");
@@ -22,8 +23,10 @@ router.use(authService.protect);
 
 router
   .route("/me")
-  .get(getUserData)
-  .patch(uploadUserImage, resizeImage, updateUserData);
+  .get(getUserData, getUser)
+  .patch(uploadUserImage, resizeImage, updateUserData, updateUser);
+
+router.delete("/deactivate", deactivateUser);
 
 // routes for admin
 // router.use(authService.restrictedTo("admin"));
