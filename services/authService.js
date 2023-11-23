@@ -5,12 +5,17 @@ const bcrypt = require("bcryptjs");
 
 const catchAsync = require("../utils/catchAsync");
 const ApiError = require("../utils/apiError");
+const sendMail = require("../utils/email");
+
 const User = require("../models/userModel");
 
-const createToken = (newUser) =>
+const createToken = (newUser, expiresIn = process.env.JWT_EXPIRES_IN) =>
   jwt.sign({ id: newUser._id }, process.env.JWT_SECRET_KEY, {
-    expiresIn: process.env.JWT_EXPIRES_IN,
+    expiresIn,
   });
+
+const verifyToken = (token) =>
+  promisify(jwt.verify)(token, process.env.JWT_SECRET_KEY);
 
 exports.signup = catchAsync(async (req, res) => {
   const { name, email, password, phone, profileImage } = req.body;
@@ -65,19 +70,12 @@ exports.protect = catchAsync(async (req, res, next) => {
     return next(new ApiError("Invalid token format", 401));
   }
 
-  const payload = await promisify(jwt.verify)(
-    token,
-    process.env.JWT_SECRET_KEY
-  );
+  const payload = await verifyToken();
 
   const user = await User.findById(payload.id);
   if (!user) {
     return next(new ApiError("This user is no longer exist", 401));
   }
-
-  console.log(
-    `${parseInt(user.changedPasswordAt.getTime() / 1000, 10)}\n${payload.iat}`
-  );
 
   if (payload.iat < parseInt(user.changedPasswordAt.getTime() / 1000, 10)) {
     return next(
@@ -89,7 +87,6 @@ exports.protect = catchAsync(async (req, res, next) => {
   }
 
   req.user = user;
-  console.log(req.user);
   next();
 });
 
@@ -109,7 +106,6 @@ exports.verifyEmail = catchAsync((req, res) => {});
 exports.updatePassword = catchAsync(async (req, res, next) => {
   const { currentPassword, newPassword } = req.body;
 
-  console.log(req.user);
   const currentUser = await User.findOne(
     { email: req.user.email },
     { password: 1 }
@@ -137,6 +133,55 @@ exports.updatePassword = catchAsync(async (req, res, next) => {
   });
 });
 
-exports.forgotPassword = catchAsync((req, res) => {});
+exports.forgotPassword = catchAsync(async (req, res, next) => {
+  const { email } = req.body;
 
-exports.resetPassword = catchAsync((req, res) => {});
+  const user = await User.findOne({ email });
+
+  if (!user) {
+    return next(ApiError("No found user with that email", 401));
+  }
+
+  const resetPasswordToken = createToken(user, "10m");
+
+  const resetUrl = `${req.protocol}://${req.get(
+    "host"
+  )}/api/v1/auth/resetPassword/${resetPasswordToken}`;
+
+  const message = `Forgot your password? Submit this link to change your password, and provide new password, confirm it ${resetUrl}\n If you don't forget your password, please ignore this message.`;
+
+  try {
+    await sendMail({
+      email: user.email,
+      subject: "Your password reset token (valid for 10 min)",
+      message,
+    });
+
+    res.status(200).send({
+      status: "success",
+      message: "Token is sent",
+    });
+  } catch (err) {
+    return next(new ApiError(err, 500));
+  }
+});
+
+exports.resetPassword = catchAsync(async (req, res, next) => {
+  const { resetToken } = req.params;
+  const { password } = req.body;
+
+  const payload = await verifyToken(resetToken);
+
+  const user = await User.findById(payload.id);
+
+  if (!user) {
+    return next(new ApiError("No found User with that id", 404));
+  }
+  user.password = password;
+  await user.save();
+
+  res.status(200).send({
+    status: "success",
+    data: user,
+  });
+});

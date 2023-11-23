@@ -76,3 +76,32 @@ exports.updatePasswordValidator = [
 
   validatorMiddleware,
 ];
+
+exports.forgotPasswordValidator = [
+  check("email")
+    .notEmpty()
+    .withMessage("Email required")
+    .isEmail()
+    .withMessage("Invalid email"),
+
+  validatorMiddleware,
+];
+
+exports.resetPasswordValidator = [
+  check("password")
+    .notEmpty()
+    .withMessage("Password is required")
+    .isStrongPassword()
+    .withMessage("Weak password"),
+
+  check("confirmPassword")
+    .notEmpty()
+    .withMessage("Confirm Password is required")
+    .custom((confirmPassword, { req }) => {
+      if (confirmPassword !== req.body.password) {
+        return Promise.reject(new Error("The passwords do not match"));
+      }
+      return true;
+    }),
+  validatorMiddleware,
+];

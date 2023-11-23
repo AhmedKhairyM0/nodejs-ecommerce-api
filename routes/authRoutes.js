@@ -5,12 +5,16 @@ const {
   login,
   protect,
   updatePassword,
+  forgotPassword,
+  resetPassword,
 } = require("../services/authService");
 
 const {
   signupValidator,
   loginValidator,
   updatePasswordValidator,
+  forgotPasswordValidator,
+  resetPasswordValidator,
 } = require("../utils/validators/authValidator");
 
 const router = express.Router();
@@ -24,6 +28,14 @@ router.patch(
   protect,
   updatePasswordValidator,
   updatePassword
+);
+
+router.post("/forgotPassword", forgotPasswordValidator, forgotPassword);
+
+router.post(
+  "/resetPassword/:resetToken",
+  resetPasswordValidator,
+  resetPassword
 );
 
 module.exports = router;

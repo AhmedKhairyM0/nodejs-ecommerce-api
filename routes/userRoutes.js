@@ -16,29 +16,43 @@ const authService = require("../services/authService");
 
 const router = express.Router();
 
+// router.use(authService.protect, authService.restrictedTo("admin"));
+
 // routes for admin
 router
   .route("/")
   .post(
-    authService.protect,
-    authService.restrictedTo("admin"),
+    // authService.protect,
+    // authService.restrictedTo("admin"),
     uploadUserImage,
     resizeImage,
     createUserValidator,
     createUser
   )
-  .get(authService.protect, authService.restrictedTo("admin"), getUsers);
+  .get(
+    // authService.protect,
+    // authService.restrictedTo("admin"),
+    getUsers
+  );
 
 router
   .route("/:id")
-  .get(authService.protect, authService.restrictedTo("admin"), getUser)
+  .get(
+    // authService.protect,
+    // authService.restrictedTo("admin"),
+    getUser
+  )
   .patch(
-    authService.protect,
-    authService.restrictedTo("admin"),
+    // authService.protect,
+    // authService.restrictedTo("admin"),
     uploadUserImage,
     resizeImage,
     updateUser
   )
-  .delete(authService.protect, authService.restrictedTo("admin"), deleteUser);
+  .delete(
+    // authService.protect,
+    // authService.restrictedTo("admin"),
+    deleteUser
+  );
 
 module.exports = router;
