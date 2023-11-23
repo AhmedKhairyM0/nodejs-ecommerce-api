@@ -83,15 +83,19 @@ productSchema.pre("save", function (next) {
 });
 
 productSchema.post(/^init|^save/, (doc) => {
-  const imageCoverUrl = `${process.env.BASE_URL}/products/${doc.imageCover}`;
-  doc.imageCover = imageCoverUrl;
+  if (doc.imageCover) {
+    const imageCoverUrl = `${process.env.BASE_URL}/products/${doc.imageCover}`;
+    doc.imageCover = imageCoverUrl;
+  }
 
-  const imagesUrls = doc.images.map((image) => {
-    const imageUrl = `${process.env.BASE_URL}/products/${image}`;
-    return imageUrl;
-  });
+  if (doc.images) {
+    const imagesUrls = doc.images.map((image) => {
+      const imageUrl = `${process.env.BASE_URL}/products/${image}`;
+      return imageUrl;
+    });
 
-  doc.images = imagesUrls;
+    doc.images = imagesUrls;
+  }
 });
 
 // TODO: remove unused images after update or delete for images is complete

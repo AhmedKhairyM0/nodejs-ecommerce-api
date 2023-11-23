@@ -58,10 +58,12 @@ userSchema.pre("save", async function async(next) {
 
   next();
 });
-// FIXME: what if doc.profileImage is undefined
+
 userSchema.post(/^init|^save/, (doc) => {
-  const imageURL = `${process.env.BASE_URL}/users/${doc.profileImage}`;
-  doc.profileImage = imageURL;
+  if (doc.profileImage) {
+    const imageURL = `${process.env.BASE_URL}/users/${doc.profileImage}`;
+    doc.profileImage = imageURL;
+  }
 });
 
 module.exports = mongoose.model("User", userSchema);
