@@ -1,4 +1,5 @@
 const { promisify } = require("util");
+const crypto = require("crypto");
 
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
@@ -133,36 +134,56 @@ exports.updatePassword = catchAsync(async (req, res, next) => {
   });
 });
 
+/*
+ * @desc    Forgot Password handler for beginning in the reset password process
+ * @route   /api/v1/auth/forgotPassword
+ * @access  Public
+ */
 exports.forgotPassword = catchAsync(async (req, res, next) => {
+  // 1) Check if user's email is exist
   const { email } = req.body;
-
   const user = await User.findOne({ email });
 
   if (!user) {
-    return next(ApiError("No found user with that email", 401));
+    return next(new ApiError("No found user with that email", 404));
   }
 
-  const resetPasswordToken = createToken(user, "10m");
+  // 2) Create 6 digits reset code save it in DB with expiration date
+  const resetCode = Math.floor(Math.random() * 900000 + 100000).toString();
+  const resetPasswordCode = crypto
+    .createHash("sha256")
+    .update(resetCode)
+    .digest("hex");
 
-  const resetUrl = `${req.protocol}://${req.get(
-    "host"
-  )}/api/v1/auth/resetPassword/${resetPasswordToken}`;
+  const expiresInMinutes = 10;
+  user.resetPasswordCode = resetPasswordCode;
+  user.resetPasswordCodeExpiresIn = Date.now() + expiresInMinutes * 60 * 1000;
+  await user.save();
 
-  const message = `Forgot your password? Submit this link to change your password, and provide new password, confirm it ${resetUrl}\n If you don't forget your password, please ignore this message.`;
+  console.log(resetCode);
+  console.log(resetPasswordCode);
+  // 3) send the reset code at email
+  const message = `Forgot your password? Use this reset code ${resetCode} to change your password.\nIf you didn't request this pin, we recommend you change your account password.`;
 
   try {
     await sendMail({
       email: user.email,
-      subject: "Your password reset token (valid for 10 min)",
+      subject: `Your password reset code (valid for ${expiresInMinutes} min)`,
       message,
     });
 
     res.status(200).send({
       status: "success",
-      message: "Token is sent",
+      message: "The reset code of the reset password is sent",
     });
   } catch (err) {
-    return next(new ApiError(err, 500));
+    user.resetPasswordCode = undefined;
+    user.resetPasswordCodeExpiresIn = undefined;
+    await user.save();
+
+    return next(
+      new ApiError("There is error during sending the reset code email", 500)
+    );
   }
 });
 

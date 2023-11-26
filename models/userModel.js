@@ -46,6 +46,8 @@ const userSchema = new mongoose.Schema(
       type: Date,
       default: Date.now(),
     },
+    resetPasswordCode: String,
+    resetPasswordCodeExpiresIn: String,
   },
   { timestamps: true }
 );
@@ -72,7 +74,7 @@ userSchema.post(/^init|^save/, (doc) => {
   }
 });
 
-userSchema.pre(/^.*/, function (next) {
+userSchema.pre(/^find/, function (next) {
   this.find({ active: true });
   next();
 });
