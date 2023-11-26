@@ -87,6 +87,16 @@ exports.forgotPasswordValidator = [
   validatorMiddleware,
 ];
 
+exports.verifyPassResetCodeValidator = [
+  check("resetCode")
+    .notEmpty()
+    .withMessage("Provide the reset code")
+    .isLength({ max: 6, min: 6 })
+    .withMessage("The reset code length must be equal to 6"),
+
+  validatorMiddleware,
+];
+
 exports.resetPasswordValidator = [
   check("password")
     .notEmpty()
@@ -103,5 +113,6 @@ exports.resetPasswordValidator = [
       }
       return true;
     }),
+
   validatorMiddleware,
 ];

@@ -1,7 +1,5 @@
 const nodemailer = require("nodemailer");
 
-const ApiError = require("./apiError");
-
 const sendEmail = async (options) => {
   const transporter = nodemailer.createTransport({
     host: process.env.EMAIL_HOST,
@@ -18,6 +16,7 @@ const sendEmail = async (options) => {
     to: options.email,
     subject: options.subject,
     text: options.message,
+    // html: options.message,
   };
 
   await transporter.sendMail(mailOptions);

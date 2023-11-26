@@ -136,7 +136,7 @@ exports.updatePassword = catchAsync(async (req, res, next) => {
 
 /*
  * @desc    Forgot Password handler for beginning in the reset password process
- * @route   /api/v1/auth/forgotPassword
+ * @route   POST  /api/v1/auth/forgotPassword
  * @access  Public
  */
 exports.forgotPassword = catchAsync(async (req, res, next) => {
@@ -150,18 +150,16 @@ exports.forgotPassword = catchAsync(async (req, res, next) => {
 
   // 2) Create 6 digits reset code save it in DB with expiration date
   const resetCode = Math.floor(Math.random() * 900000 + 100000).toString();
-  const resetPasswordCode = crypto
+  const passwordResetCode = crypto
     .createHash("sha256")
     .update(resetCode)
     .digest("hex");
 
   const expiresInMinutes = 10;
-  user.resetPasswordCode = resetPasswordCode;
-  user.resetPasswordCodeExpiresIn = Date.now() + expiresInMinutes * 60 * 1000;
+  user.passwordResetCode = passwordResetCode;
+  user.passwordResetExpires = Date.now() + expiresInMinutes * 60 * 1000;
   await user.save();
 
-  console.log(resetCode);
-  console.log(resetPasswordCode);
   // 3) send the reset code at email
   const message = `Forgot your password? Use this reset code ${resetCode} to change your password.\nIf you didn't request this pin, we recommend you change your account password.`;
 
@@ -177,32 +175,66 @@ exports.forgotPassword = catchAsync(async (req, res, next) => {
       message: "The reset code of the reset password is sent",
     });
   } catch (err) {
-    user.resetPasswordCode = undefined;
-    user.resetPasswordCodeExpiresIn = undefined;
+    user.passwordResetCode = undefined;
+    user.passwordResetExpires = undefined;
     await user.save();
 
     return next(
-      new ApiError("There is error during sending the reset code email", 500)
+      new ApiError("There is error in sending the reset code email", 500)
     );
   }
 });
 
-exports.resetPassword = catchAsync(async (req, res, next) => {
-  const { resetToken } = req.params;
-  const { password } = req.body;
+/*
+ * @desc    Verify Forgot Password handler for beginning in the reset password process
+ * @route   POST  /api/v1/auth/verifyResetCode
+ * @access  Public
+ */
+exports.verifyResetPasswordCode = catchAsync(async (req, res, next) => {
+  // 1) Get the reset Code
+  const { resetCode } = req.body;
+  const hashedResetCode = crypto
+    .createHash("sha256")
+    .update(resetCode)
+    .digest("hex");
 
-  const payload = await verifyToken(resetToken);
-
-  const user = await User.findById(payload.id);
+  // 2) Check if there is user with the reset Code and not expired
+  const user = await User.findOne({
+    passwordResetCode: hashedResetCode,
+    passwordResetExpires: { $gt: Date.now() },
+  });
 
   if (!user) {
-    return next(new ApiError("No found User with that id", 404));
+    return next(new ApiError("Reset Code is wrong or expired", 404));
   }
+
+  // 3) Create & send jwt token to enable user form reset password
+  const token = createToken(user);
+
+  user.passwordResetCode = undefined;
+  user.passwordResetExpires = undefined;
+  await user.save();
+
+  res.status(200).send({
+    status: "success",
+    token,
+  });
+});
+
+/*
+ * @desc    Reset Password
+ * @route   Patch  /api/v1/auth/resetPassword
+ * @access  Private/Protect
+ */
+exports.resetPassword = catchAsync(async (req, res, next) => {
+  const { password } = req.body;
+  const { user } = req;
+
   user.password = password;
   await user.save();
 
   res.status(200).send({
     status: "success",
-    data: user,
+    message: "Your password has been updated",
   });
 });
