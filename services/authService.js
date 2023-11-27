@@ -18,6 +18,8 @@ const createToken = (newUser, expiresIn = process.env.JWT_EXPIRES_IN) =>
 const verifyToken = (token) =>
   promisify(jwt.verify)(token, process.env.JWT_SECRET_KEY);
 
+// TODO: Make request to permit to user verify his email
+
 /*
  * @desc    Register new user
  * @route   POST  /api/v1/auth/signup
