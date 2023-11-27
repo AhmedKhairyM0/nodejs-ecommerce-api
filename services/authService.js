@@ -7,7 +7,7 @@ const bcrypt = require("bcryptjs");
 const catchAsync = require("../utils/catchAsync");
 const ApiError = require("../utils/apiError");
 const sendMail = require("../utils/email");
-
+const hashToken = require("../utils/hashToken");
 const User = require("../models/userModel");
 
 const createToken = (newUser, expiresIn = process.env.JWT_EXPIRES_IN) =>
@@ -18,10 +18,15 @@ const createToken = (newUser, expiresIn = process.env.JWT_EXPIRES_IN) =>
 const verifyToken = (token) =>
   promisify(jwt.verify)(token, process.env.JWT_SECRET_KEY);
 
-exports.signup = catchAsync(async (req, res) => {
+/*
+ * @desc    Register new user
+ * @route   POST  /api/v1/auth/signup
+ * @access  Public
+ */
+exports.signup = catchAsync(async (req, res, next) => {
   const { name, email, password, phone, profileImage } = req.body;
 
-  const newUser = await User.create({
+  const user = await User.create({
     name,
     email,
     password,
@@ -29,12 +34,65 @@ exports.signup = catchAsync(async (req, res) => {
     profileImage,
   });
 
-  const token = createToken(newUser);
+  const verificationToken = await user.createEmailVerificationToken();
 
-  res.status(201).send({
+  const message = `Verify your account in 1 hour with ${
+    req.protocol
+  }://${req.get("host")}/api/v1/auth/activateAccount/${verificationToken}`;
+
+  try {
+    await sendMail({
+      email: user.email,
+      subject: "Email Verification (in 1 hour)",
+      message,
+    });
+
+    res.status(201).send({
+      status: "success",
+      message: "Email Verification is sent to email",
+    });
+  } catch (err) {
+    await user.clearEmailVerificationToken();
+
+    return next(
+      new ApiError("There is wrong in sending email verification", 500)
+    );
+  }
+});
+
+/*
+ * @desc    Verify email to activate user's account
+ * @route   POST  /api/v1/auth/activateAccount/:verificationToken
+ * @access  Public
+ */
+exports.verifyEmail = catchAsync(async (req, res, next) => {
+  // 1) Get verification token
+  const { verificationToken } = req.params;
+  const hashedVerificationToken = hashToken(verificationToken);
+
+  // 2) Get user's verificationToken
+  const user = await User.findOne({
+    emailVerificationToken: hashedVerificationToken,
+    emailVerificationExpires: { $gt: Date.now() },
+  });
+
+  // 3) Check if verification token is valid and not expired
+  if (!user) {
+    return next(
+      new ApiError("Email verification token is invalid or expired", 401)
+    );
+  }
+
+  // 4) Update user's account status to active
+  user.isVerifiedEmail = true;
+  user.emailVerificationToken = undefined;
+  user.emailVerificationExpires = undefined;
+
+  await user.save();
+
+  res.status(200).send({
     status: "success",
-    token,
-    data: newUser,
+    message: "Your account has been verified. You can login now",
   });
 });
 
@@ -59,32 +117,48 @@ exports.login = catchAsync(async (req, res, next) => {
 });
 
 exports.protect = catchAsync(async (req, res, next) => {
-  const { authorization } = req.headers;
+  // 1) Check if token is correctly provided
 
-  if (!authorization)
+  const { authorization } = req.headers;
+  if (!authorization || !authorization.startsWith("Bearer"))
     return next(
       new ApiError("You are not login. Please, login to access this route", 401)
     );
 
   const token = authorization.split(" ")[1];
-  if (!authorization.startsWith("Bearer") || !token) {
-    return next(new ApiError("Invalid token format", 401));
-  }
 
+  // 2) Check if token is valid or is not expired
   const payload = await verifyToken(token);
 
+  // 3) Check if user's id is exist
   const user = await User.findById(payload.id);
   if (!user) {
     return next(new ApiError("This user is no longer exist", 401));
   }
-
-  if (payload.iat < parseInt(user.changedPasswordAt.getTime() / 1000, 10)) {
+  // 4) Check if user's email is verified
+  if (!user.isVerifiedEmail) {
     return next(
       new ApiError(
-        "The password was recently changed, please log in again",
+        "Your email is not still verified. Verify your email, please",
         401
       )
     );
+  }
+
+  // 5) Check if user had changed his password after token is signed
+  if (user.changedPasswordAt) {
+    const changedPasswordAt = parseInt(
+      user.changedPasswordAt.getTime() / 1000,
+      10
+    );
+    if (payload.iat < changedPasswordAt) {
+      return next(
+        new ApiError(
+          "The password was recently changed, please log in again",
+          401
+        )
+      );
+    }
   }
 
   req.user = user;
@@ -102,7 +176,7 @@ exports.restrictedTo =
 
 exports.logout = catchAsync((req, res) => {});
 
-exports.verifyEmail = catchAsync((req, res) => {});
+// exports.verifyEmail = catchAsync((req, res) => {});
 
 exports.updatePassword = catchAsync(async (req, res, next) => {
   const { currentPassword, newPassword } = req.body;
