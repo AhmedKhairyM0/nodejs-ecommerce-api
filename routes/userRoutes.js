@@ -6,19 +6,29 @@ const {
   getUser,
   updateUser,
   deleteUser,
+  changePassword,
+
   getUserData,
   updateUserData,
+  changeMyPassword,
   deactivateUser,
   uploadUserImage,
   resizeImage,
 } = require("../services/userService");
 
-const { createUserValidator } = require("../utils/validators/userValidator");
+const { protect } = require("../services/authService");
+
+const {
+  createUserValidator,
+  changeMyPasswordValidator,
+  changePasswordValidator,
+} = require("../utils/validators/userValidator");
 
 const authService = require("../services/authService");
 
 const router = express.Router();
 
+// Routes For Logged user
 router.use(authService.protect);
 
 router
@@ -26,44 +36,29 @@ router
   .get(getUserData, getUser)
   .patch(uploadUserImage, resizeImage, updateUserData, updateUser);
 
+router.patch(
+  "/changeMyPassword",
+  changeMyPasswordValidator,
+  protect,
+  changeMyPassword
+);
+
 router.delete("/deactivate", deactivateUser);
 
-// routes for admin
-// router.use(authService.restrictedTo("admin"));
+// Routes For Admin
+router.use(authService.restrictedTo("admin"));
+
 router
   .route("/")
-  .post(
-    // authService.protect,
-    // authService.restrictedTo("admin"),
-    uploadUserImage,
-    resizeImage,
-    createUserValidator,
-    createUser
-  )
-  .get(
-    // authService.protect,
-    // authService.restrictedTo("admin"),
-    getUsers
-  );
+  .post(uploadUserImage, resizeImage, createUserValidator, createUser)
+  .get(getUsers);
 
 router
   .route("/:id")
-  .get(
-    // authService.protect,
-    // authService.restrictedTo("admin"),
-    getUser
-  )
-  .patch(
-    // authService.protect,
-    // authService.restrictedTo("admin"),
-    uploadUserImage,
-    resizeImage,
-    updateUser
-  )
-  .delete(
-    // authService.protect,
-    // authService.restrictedTo("admin"),
-    deleteUser
-  );
+  .get(getUser)
+  .patch(uploadUserImage, resizeImage, updateUser)
+  .delete(deleteUser);
+
+router.patch("/changePassword/:id", changePasswordValidator, changePassword);
 
 module.exports = router;
