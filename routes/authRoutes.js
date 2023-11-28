@@ -5,7 +5,6 @@ const {
   verifyEmail,
   login,
   protect,
-  updatePassword,
   forgotPassword,
   resetPassword,
   verifyResetPasswordCode,
@@ -25,12 +24,6 @@ const router = express.Router();
 router.post("/signup", signupValidator, signup);
 router.patch("/activateAccount/:verificationToken", verifyEmail);
 router.post("/login", loginValidator, login);
-router.patch(
-  "/updateMyPassword",
-  protect,
-  updatePasswordValidator,
-  updatePassword
-);
 router.post("/forgotPassword", forgotPasswordValidator, forgotPassword);
 router.post(
   "/verifyResetCode",

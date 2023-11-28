@@ -2,18 +2,13 @@ const { promisify } = require("util");
 const crypto = require("crypto");
 
 const jwt = require("jsonwebtoken");
-const bcrypt = require("bcryptjs");
 
 const catchAsync = require("../utils/catchAsync");
 const ApiError = require("../utils/apiError");
 const sendMail = require("../utils/email");
 const hashToken = require("../utils/hashToken");
+const createToken = require("../utils/createToken");
 const User = require("../models/userModel");
-
-const createToken = (newUser, expiresIn = process.env.JWT_EXPIRES_IN) =>
-  jwt.sign({ id: newUser._id }, process.env.JWT_SECRET_KEY, {
-    expiresIn,
-  });
 
 const verifyToken = (token) =>
   promisify(jwt.verify)(token, process.env.JWT_SECRET_KEY);
@@ -103,7 +98,7 @@ exports.login = catchAsync(async (req, res, next) => {
 
   const user = await User.findOne({ email }).select("+password");
 
-  if (!user || !(await bcrypt.compare(password, user.password))) {
+  if (!user || !(await user.isCorrectPassword(password))) {
     return next(new ApiError("Incorrect email or password", 401));
   }
 
@@ -137,6 +132,7 @@ exports.protect = catchAsync(async (req, res, next) => {
   if (!user) {
     return next(new ApiError("This user is no longer exist", 401));
   }
+
   // 4) Check if user's email is verified
   if (!user.isVerifiedEmail) {
     return next(
@@ -168,47 +164,15 @@ exports.protect = catchAsync(async (req, res, next) => {
 });
 
 // roles: ["admin", "user"]
-exports.restrictedTo =
-  (...roles) =>
-  (req, res, next) => {
+exports.restrictedTo = function (...roles) {
+  return (req, res, next) => {
     if (roles.includes(req.user.role)) return next();
 
     return next(new ApiError("You don't have permission for this action", 403));
   };
+};
 
 exports.logout = catchAsync((req, res) => {});
-
-// exports.verifyEmail = catchAsync((req, res) => {});
-
-exports.updatePassword = catchAsync(async (req, res, next) => {
-  const { currentPassword, newPassword } = req.body;
-
-  const currentUser = await User.findOne(
-    { email: req.user.email },
-    { password: 1 }
-  );
-  // .select("password");
-
-  const correctPassword = await bcrypt.compare(
-    currentPassword,
-    currentUser.password
-  );
-
-  if (!correctPassword) {
-    return next(new ApiError("Current password is wrong"));
-  }
-
-  currentUser.password = newPassword;
-  await currentUser.save();
-
-  const token = createToken(currentUser);
-
-  res.status(200).send({
-    status: "success",
-    token,
-    data: currentUser,
-  });
-});
 
 /*
  * @desc    Forgot Password handler for beginning in the reset password process

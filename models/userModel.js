@@ -85,6 +85,10 @@ userSchema.pre(/^find/, function (next) {
   next();
 });
 
+userSchema.methods.isCorrectPassword = async function (candidatePassword) {
+  return await bcrypt.compare(candidatePassword, this.password);
+};
+
 userSchema.methods.createEmailVerificationToken = async function () {
   const verificationToken = crypto.randomBytes(32).toString("hex");
 
