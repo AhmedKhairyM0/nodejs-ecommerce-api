@@ -80,15 +80,15 @@ exports.changePassword = catchAsync(async (req, res, next) => {
   const { newPassword } = req.body;
   const { id } = req.params;
 
-  const user = await User.findByIdAndUpdate(
-    id,
-    { password: newPassword },
-    { new: true }
-  );
+  console.log(newPassword);
+  const user = await User.findById(id);
 
   if (!user) {
     return next(new ApiError("No found user with this id", 404));
   }
+
+  user.password = newPassword;
+  await user.save();
 
   res.status(200).send({
     status: "success",
