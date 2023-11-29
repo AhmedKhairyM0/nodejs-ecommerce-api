@@ -31,6 +31,18 @@ exports.signup = catchAsync(async (req, res, next) => {
     profileImage,
   });
 
+  req.user = user;
+  next();
+});
+
+/*
+ * @desc    Activate User account verification
+ * @route   POST  /api/v1/auth/activateAccountVerfication
+ * @access  Private/Protect
+ */
+exports.activateAccountVerification = catchAsync(async (req, res, next) => {
+  const { user } = req;
+
   const verificationToken = await user.createEmailVerificationToken();
 
   const message = `Verify your account in 1 hour with ${
@@ -93,6 +105,25 @@ exports.verifyEmail = catchAsync(async (req, res, next) => {
   });
 });
 
+/*
+ * @desc    Checks whether the user's email has been verified or not,
+ *          and is a useful middleware for secure sensitive operations such as (payment, data update, etc.)
+ */
+exports.checkEmailVerified = (req, res, next) => {
+  const { user } = req;
+
+  if (!user.isVerifiedEmail) {
+    return next(
+      new ApiError(
+        "Your email is not still verified. Verify your email, please",
+        401
+      )
+    );
+  }
+
+  next();
+};
+
 exports.login = catchAsync(async (req, res, next) => {
   const { email, password } = req.body;
 
@@ -133,17 +164,7 @@ exports.protect = catchAsync(async (req, res, next) => {
     return next(new ApiError("This user is no longer exist", 401));
   }
 
-  // 4) Check if user's email is verified
-  if (!user.isVerifiedEmail) {
-    return next(
-      new ApiError(
-        "Your email is not still verified. Verify your email, please",
-        401
-      )
-    );
-  }
-
-  // 5) Check if user had changed his password after token is signed
+  // 4) Check if user had changed his password after token is signed
   if (user.changedPasswordAt) {
     const changedPasswordAt = parseInt(
       user.changedPasswordAt.getTime() / 1000,

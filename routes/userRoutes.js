@@ -29,15 +29,22 @@ const authService = require("../services/authService");
 const router = express.Router();
 
 // Routes For Logged user
-// router.use(authService.protect);
+router.use(authService.protect);
 
 router
   .route("/me")
   .get(getUserData, getUser)
-  .patch(uploadUserImage, resizeImage, updateUserData, updateUser);
+  .patch(
+    authService.checkEmailVerified,
+    uploadUserImage,
+    resizeImage,
+    updateUserData,
+    updateUser
+  );
 
 router.patch(
   "/changeMyPassword",
+  authService.checkEmailVerified,
   changeMyPasswordValidator,
   protect,
   changeMyPassword
@@ -46,7 +53,7 @@ router.patch(
 router.delete("/deactivate", deactivateUser);
 
 // Routes For Admin
-// router.use(authService.restrictedTo("admin"));
+router.use(authService.restrictedTo("admin"));
 
 router
   .route("/")
