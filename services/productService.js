@@ -48,9 +48,12 @@ exports.resizeImage = catchAsync(async (req, res, next) => {
 
 exports.createProduct = factory.createOne(Product);
 
-exports.getProducts = factory.getAll(Product, "category subcategories");
+exports.getProducts = factory.getAll(Product);
 
-exports.getProduct = factory.getOne(Product, "category subcategories");
+exports.getProduct = factory.getOne(Product, {
+  path: "category subcategories reviews",
+  options: { limit: 10 },
+});
 
 exports.updateProduct = factory.updateOne(Product);
 

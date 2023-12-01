@@ -14,7 +14,7 @@
 - [x] Authorization
   - [x] Restricted roles
   - [ ] Apply ACL architecture permissions
-- [ ] User Operations
+- [x] User Operations
   - [x] Admin
     - CRUD operations on user
     - Change user password

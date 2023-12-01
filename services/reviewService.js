@@ -6,6 +6,8 @@ exports.addLoggedUserID = (req, res, next) => {
   next();
 };
 
+const populatedUser = { path: "user", select: "name profileImage -_id" };
+
 /**
  * @desc    Create new review
  * @route   POST /api/v1/reviews
@@ -18,14 +20,14 @@ exports.createReview = factory.createOne(Review);
  * @route   GET /api/v1/reviews
  * @access  Public
  */
-exports.getReviews = factory.getAll(Review);
+exports.getReviews = factory.getAll(Review, populatedUser);
 
 /**
  * @desc    Get specific review
  * @route   GET /api/v1/reviews/:id
  * @access  Public
  */
-exports.getReview = factory.getOne(Review);
+exports.getReview = factory.getOne(Review, populatedUser);
 
 /**
  * @desc    Update specific review

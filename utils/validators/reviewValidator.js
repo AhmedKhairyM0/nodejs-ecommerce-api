@@ -34,19 +34,18 @@ exports.createReviewValidator = [
           );
         }
       })
-    )
-    .custom((productId, { req }) =>
-      Review.findOne({ user: req.user.id, product: productId }).then(
-        (review) => {
-          console.log(`REVIEW VALIDATOt => req.user.id: ${req.user.id}`);
-          if (review) {
-            return Promise.reject(
-              new Error("You already made a review before ")
-            );
-          }
-        }
-      )
     ),
+  // .custom((productId, { req }) =>
+  //   Review.findOne({ user: req.user.id, product: productId }).then(
+  //     (review) => {
+  //       if (review) {
+  //         return Promise.reject(
+  //           new Error("You already made a review before ")
+  //         );
+  //       }
+  //     }
+  //   )
+  // ),
 
   validatorMiddleware,
 ];
@@ -62,12 +61,7 @@ exports.updateReviewValidator = [
     .withMessage("Invalid Review id format")
     .custom((reviewId, { req }) =>
       Review.findById(reviewId).then((review) => {
-        if (!review) {
-          return Promise.reject(
-            new Error(`No review found with that id ${reviewId}`)
-          );
-        }
-        if (req.user.id !== review.user) {
+        if (review && req.user.id !== review.user.toString()) {
           return Promise.reject(
             new Error("You are not allowed to perform this action")
           );

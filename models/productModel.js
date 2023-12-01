@@ -72,10 +72,21 @@ const productSchema = new mongoose.Schema(
       },
     ],
   },
-  { timestamps: true }
+  {
+    timestamps: true,
+    // To enable virtual populate
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true },
+  }
 );
 
 // productSchema.index({ subcategories: { unique: true, dropDups: true } });
+
+productSchema.virtual("reviews", {
+  ref: "Review",
+  localField: "_id",
+  foreignField: "product",
+});
 
 productSchema.pre("save", function (next) {
   slugifyPreSave(this.title, this);
