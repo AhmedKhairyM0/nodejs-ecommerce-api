@@ -21,6 +21,8 @@ const authService = require("../services/authService");
 
 const router = express.Router();
 
+router.use("/:productId/reviews", require("./reviewRoutes"));
+
 router
   .route("/")
   .post(

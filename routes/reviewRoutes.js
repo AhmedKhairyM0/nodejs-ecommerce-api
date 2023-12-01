@@ -14,13 +14,15 @@ const {
   updateReview,
   deleteReview,
   addLoggedUserID,
+  createFilterObject,
+  setProductIdToBody,
 } = require("../services/reviewService");
 
 const authService = require("../services/authService");
 
-const router = express.Router();
+const router = express.Router({ mergeParams: true });
 
-router.get("/", getReviews);
+router.get("/", createFilterObject, getReviews);
 router.get("/:id", getReviewValidator, getReview);
 
 router.use(authService.protect);
@@ -30,6 +32,7 @@ router
   .post(
     authService.restrictedTo("user"),
     addLoggedUserID,
+    setProductIdToBody,
     createReviewValidator,
     createReview
   );
@@ -42,5 +45,5 @@ router
     deleteReviewValidator,
     deleteReview
   );
-  
+
 module.exports = router;
