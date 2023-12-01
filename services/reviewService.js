@@ -1,6 +1,11 @@
 const factory = require("./factoryService");
 const Review = require("../models/reviewModel");
 
+exports.addLoggedUserID = (req, res, next) => {
+  req.body.user = req.user.id;
+  next();
+};
+
 /**
  * @desc    Create new review
  * @route   POST /api/v1/reviews

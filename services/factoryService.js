@@ -56,7 +56,12 @@ exports.getOne = (Model, popOption) =>
     const doc = await query;
 
     if (!doc) {
-      return next(new ApiError(`No document with this id: ${id}`, 404));
+      return next(
+        new ApiError(
+          `No ${Model.collection.collectionName} found with this id: ${id}`,
+          404
+        )
+      );
     }
 
     res.status(200).send({
@@ -77,7 +82,12 @@ exports.updateOne = (Model) =>
     });
 
     if (!doc) {
-      return next(new ApiError(`No document with this id: ${id}`, 404));
+      return next(
+        new ApiError(
+          `No ${Model.collection.collectionName} found with this id: ${id}`,
+          404
+        )
+      );
     }
 
     res.status(200).send({
@@ -92,7 +102,12 @@ exports.deleteOne = (Model) =>
     const doc = await Model.findByIdAndDelete(id);
 
     if (!doc) {
-      return next(new ApiError(`No document with this id: ${id}`, 404));
+      return next(
+        new ApiError(
+          `No ${Model.collection.collectionName} found with this id: ${id}`,
+          404
+        )
+      );
     }
 
     res.status(204).send({
