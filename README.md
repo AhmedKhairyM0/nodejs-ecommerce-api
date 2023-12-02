@@ -44,7 +44,7 @@
 - Send Emails: nodemailer
 - Environment Variables: dotenv
 
-## E-Shop API Usage
+<!-- ## E-Shop API Usage
 
 ```
 
@@ -78,4 +78,4 @@ BASE_URL: https://ecommerce-api-ku0x.onrender.com/api/v1/
 
 ### User
 
-### Auth
+### Auth -->
