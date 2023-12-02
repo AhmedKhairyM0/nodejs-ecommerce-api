@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const Product = require("./productModel");
 
 const reviewSchema = new mongoose.Schema(
   {
@@ -24,5 +25,41 @@ const reviewSchema = new mongoose.Schema(
 );
 
 reviewSchema.index({ user: 1, product: 1 }, { unique: true });
+
+// Caculate the average ratings and quantity when the reviews is changed [create, update, delete]
+reviewSchema.statics.calcAverageRatings = async function (productId) {
+  const result = await this.aggregate([
+    {
+      $match: { product: productId },
+    },
+    {
+      $group: {
+        _id: "$product",
+        ratingsAverage: { $avg: "$ratings" },
+        ratingsQuantity: { $sum: 1 },
+      },
+    },
+  ]);
+
+  if (result.length > 0) {
+    await Product.findByIdAndUpdate(productId, {
+      ratingsAverage: +result[0].ratingsAverage.toFixed(2),
+      ratingsQuantity: result[0].ratingsQuantity,
+    });
+  } else {
+    await Product.findByIdAndUpdate(productId, {
+      ratingsAverage: 0,
+      ratingsQuantity: 0,
+    });
+  }
+};
+
+reviewSchema.post("save", { query: true }, async function () {
+  await this.constructor.calcAverageRatings(this.product);
+});
+
+reviewSchema.post("remove", { query: true }, async function () {
+  await this.constructor.calcAverageRatings(this.product);
+});
 
 module.exports = mongoose.model("Review", reviewSchema);

@@ -34,18 +34,18 @@ exports.createReviewValidator = [
           );
         }
       })
+    )
+    .custom((productId, { req }) =>
+      Review.findOne({ user: req.user.id, product: productId }).then(
+        (review) => {
+          if (review) {
+            return Promise.reject(
+              new Error("You already made a review before ")
+            );
+          }
+        }
+      )
     ),
-  // .custom((productId, { req }) =>
-  //   Review.findOne({ user: req.user.id, product: productId }).then(
-  //     (review) => {
-  //       if (review) {
-  //         return Promise.reject(
-  //           new Error("You already made a review before ")
-  //         );
-  //       }
-  //     }
-  //   )
-  // ),
 
   validatorMiddleware,
 ];

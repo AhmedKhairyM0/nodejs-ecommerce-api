@@ -90,6 +90,8 @@ exports.updateOne = (Model) =>
       );
     }
 
+    doc.save();
+
     res.status(200).send({
       status: "success",
       data: doc,
@@ -109,6 +111,8 @@ exports.deleteOne = (Model) =>
         )
       );
     }
+
+    doc.save();
 
     res.status(204).send({
       status: "success",

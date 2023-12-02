@@ -1,11 +1,6 @@
 const mongoose = require("mongoose");
 const slugifyPreSave = require("../middlewares/slugifyPreSave");
 
-const Category = require("./categoryModel");
-const SubCategory = require("./subCategoryModel");
-const Brand = require("./brandModel");
-const ApiError = require("../utils/apiError");
-
 // name, description, colors, images, price, discountPrice, quantity, brand, category, subcategories, reviews, coupons
 const productSchema = new mongoose.Schema(
   {
@@ -42,9 +37,9 @@ const productSchema = new mongoose.Schema(
     },
     sold: {
       type: Number,
-      default: 0,
+      default: 0, 
     },
-    ratingAverage: {
+    ratingsAverage: {
       type: Number,
       min: [1, "Rating must be above or equal 1.0"],
       max: [5, "Rating must be below or equal 5.0"],
@@ -56,7 +51,6 @@ const productSchema = new mongoose.Schema(
     brand: {
       type: mongoose.Schema.ObjectId,
       ref: "Brand",
-      // required: [true, "Brand required"],
     },
     category: {
       type: mongoose.Schema.ObjectId,
@@ -67,8 +61,6 @@ const productSchema = new mongoose.Schema(
       {
         type: mongoose.Schema.ObjectId,
         ref: "SubCategory",
-
-        // required: [true, "Subcategories required"],
       },
     ],
   },
