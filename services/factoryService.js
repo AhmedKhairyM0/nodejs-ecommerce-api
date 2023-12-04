@@ -90,8 +90,6 @@ exports.updateOne = (Model) =>
       );
     }
 
-    doc.save();
-
     res.status(200).send({
       status: "success",
       data: doc,
@@ -105,14 +103,9 @@ exports.deleteOne = (Model) =>
 
     if (!doc) {
       return next(
-        new ApiError(
-          `No ${Model.collection.collectionName} found with this id: ${id}`,
-          404
-        )
+        new ApiError(`No ${Model.modelName} found with this id: ${id}`, 404)
       );
     }
-
-    doc.save();
 
     res.status(204).send({
       status: "success",
