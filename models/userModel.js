@@ -60,6 +60,19 @@ const userSchema = new mongoose.Schema(
         ref: "Product",
       },
     ],
+    addresses: [
+      {
+        id: { type: mongoose.Schema.Types.ObjectId },
+        alias: {
+          type: String,
+          unique: true,
+        },
+        city: String,
+        details: String,
+        phone: String,
+        postalCode: String,
+      },
+    ],
   },
   { timestamps: true }
 );

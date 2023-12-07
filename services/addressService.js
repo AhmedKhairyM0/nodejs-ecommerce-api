@@ -1,50 +1,48 @@
 const catchAsync = require("../utils/catchAsync");
 const User = require("../models/userModel");
 
-exports.addProductToWishlist = catchAsync(async (req, res, next) => {
+exports.addUserAddress = catchAsync(async (req, res, next) => {
   const { id } = req.user;
-  const { productId } = req.body;
 
   const user = await User.findByIdAndUpdate(
     id,
     {
-      $addToSet: { wishlist: productId },
+      $addToSet: { addresses: req.body },
     },
     { new: true }
   );
 
   res.status(200).send({
     status: "success",
-    data: user.wishlist,
+    data: user.addresses,
   });
 });
 
-exports.removeProductFromWishlist = catchAsync(async (req, res, next) => {
+exports.removeUserAddress = catchAsync(async (req, res, next) => {
   const { id } = req.user;
-  const { productId } = req.params;
-
+  const { addressId } = req.params;
   const user = await User.findByIdAndUpdate(
     id,
     {
-      $pull: { wishlist: productId },
+      $pull: { addresses: { _id: addressId } },
     },
     { new: true }
   );
 
   res.status(200).send({
     status: "success",
-    data: user.wishlist,
+    data: user.addresses,
   });
 });
 
-exports.getUserWishlist = catchAsync(async (req, res, next) => {
+exports.getUserAddresses = catchAsync(async (req, res, next) => {
   const { id } = req.user;
 
-  const user = await User.findById(id).populate("wishlist");
+  const user = await User.findById(id);
 
   res.status(200).send({
     status: "success",
-    results: user.wishlist.length,
-    data: user.wishlist,
+    results: user.addresses.length,
+    data: user.addresses,
   });
 });
