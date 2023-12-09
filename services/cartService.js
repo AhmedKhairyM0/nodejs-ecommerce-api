@@ -83,3 +83,26 @@ exports.addItemToCart = catchAsync(async (req, res, next) => {
     data: cart,
   });
 });
+
+/**
+ * @desc    Get logged user's cart
+ * @route   GET /api/v1/cart
+ * @access  Protected/User
+ */
+exports.getCart = catchAsync(async (req, res, next) => {
+  const { _id: userId } = req.user;
+
+  const cart = await Cart.findOne({ user: userId });
+
+  if (!cart) {
+    return next(
+      new ApiError(`There is no cart for this user with id: ${userId}`, 404)
+    );
+  }
+
+  res.status(200).send({
+    status: "success",
+    results: cart.cartItems.length,
+    data: cart,
+  });
+});
