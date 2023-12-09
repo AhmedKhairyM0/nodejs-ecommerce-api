@@ -1,7 +1,8 @@
 const catchAsync = require("../utils/catchAsync");
-const Product = require("../models/productModel");
-const Cart = require("../models/cartModel");
 const ApiError = require("../utils/apiError");
+const Product = require("../models/productModel");
+const Coupon = require("../models/couponModel");
+const Cart = require("../models/cartModel");
 
 /**
  * @desc    Add Product item to cart
@@ -60,7 +61,7 @@ exports.addItemToCart = catchAsync(async (req, res, next) => {
 
   if (itemIndex > -1) {
     const cartItem = cart.cartItems[itemIndex];
-    cart.totalPrice += product.price * (quantity - cartItem.quantity);
+    // cart.totalPrice += product.price * (quantity - cartItem.quantity);
     cartItem.quantity = quantity;
     cart.cartItems[itemIndex] = cartItem;
   } else {
@@ -70,10 +71,10 @@ exports.addItemToCart = catchAsync(async (req, res, next) => {
       quantity,
       price: product.price,
     });
-    cart.totalPrice += product.price * quantity;
+    // cart.totalPrice += product.price * quantity;
   }
 
-  // cart.calcTotalPrice();
+  cart.calcTotalPrice();
   await cart.save();
 
   return res.status(201).send({
@@ -183,6 +184,35 @@ exports.updateCartItemQuantity = catchAsync(async (req, res, next) => {
   res.status(200).send({
     status: "success",
     results: cart.cartItems.length,
+    data: cart,
+  });
+});
+
+/**
+ * @desc    Apply Discount on the total price of the cart
+ * @route   POST /api/v1/cart/applyCoupon
+ * @access  Protected/User
+ */
+exports.applyCoupon = catchAsync(async (req, res, next) => {
+  const { _id: userId } = req.user;
+  const { coupon: couponName } = req.body;
+
+  const coupon = await Coupon.findOne({
+    name: couponName,
+    expiresIn: { $gt: Date.now() },
+  });
+
+  if (!coupon) {
+    return next(new ApiError("Coupon is invalid or expired", 404));
+  }
+
+  const cart = await Cart.findOne({ user: userId });
+
+  cart.totalPriceAfterDiscount = (cart.totalPrice - cart.totalPrice * (coupon.discount / 100)).toFixed(2);
+  await cart.save();
+
+  res.status(200).send({
+    status: "success",
     data: cart,
   });
 });
