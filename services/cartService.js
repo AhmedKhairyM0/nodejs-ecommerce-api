@@ -48,35 +48,33 @@ exports.addItemToCart = catchAsync(async (req, res, next) => {
 
   // 3) Check if the logged user doesn't have cart, then create new cart
   if (!cart) {
-    cart = await Cart.create({
-      cartItems: [
-        { product: productId, color, quantity, price: product.price },
-      ],
-      totalPrice: product.price * quantity,
-      user: userId,
-    });
-  } else {
-    // 5) if user has cart, then add/update items at the cart
-    const itemIndex = cart.cartItems.findIndex(
-      (item) => item.product.toString() === productId && item.color === color
-    );
-    // TODO: When does product's quantity decrement?
-    if (itemIndex > -1) {
-      const cartItem = cart.cartItems[itemIndex];
-      cart.totalPrice += product.price * (quantity - cartItem.quantity);
-      cartItem.quantity = quantity;
-      cart.cartItems[itemIndex] = cartItem;
-    } else {
-      cart.cartItems.push({
-        product: productId,
-        color,
-        quantity,
-        price: product.price,
-      });
-      cart.totalPrice += product.price * quantity;
-    }
-    await cart.save();
+    cart = new Cart({ cartItems: [], totalPrice: 0, user: userId });
   }
+
+  // 4) if user has cart, then add/update items at the cart
+  const itemIndex = cart.cartItems.findIndex(
+    (item) => item.product.toString() === productId && item.color === color
+  );
+
+  // TODO: When does product's quantity decrement?
+
+  if (itemIndex > -1) {
+    const cartItem = cart.cartItems[itemIndex];
+    cart.totalPrice += product.price * (quantity - cartItem.quantity);
+    cartItem.quantity = quantity;
+    cart.cartItems[itemIndex] = cartItem;
+  } else {
+    cart.cartItems.push({
+      product: productId,
+      color,
+      quantity,
+      price: product.price,
+    });
+    cart.totalPrice += product.price * quantity;
+  }
+
+  // cart.calcTotalPrice();
+  await cart.save();
 
   return res.status(201).send({
     status: "success",
@@ -133,5 +131,25 @@ exports.removeItemFromCart = catchAsync(async (req, res, next) => {
   res.status(200).send({
     status: "success",
     data: cart,
+  });
+});
+
+/**
+ * @desc    Remove cart
+ * @route   DELETE /api/v1/cart
+ * @access  Protected/User
+ */
+exports.clearCart = catchAsync(async (req, res, next) => {
+  const { _id: userId } = req.user;
+
+  const cart = await Cart.findOneAndDelete({ user: userId });
+
+  if (!cart) {
+    return next(new ApiError("There is no cart for this user", 404));
+  }
+
+  res.status(204).send({
+    status: "success",
+    data: null,
   });
 });
