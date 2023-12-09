@@ -153,3 +153,36 @@ exports.clearCart = catchAsync(async (req, res, next) => {
     data: null,
   });
 });
+
+/**
+ * @desc    Change the quantity of a specific cart item
+ * @route   PATCH /api/v1/cart/cartItems/:id
+ * @access  Protected/User
+ */
+exports.updateCartItemQuantity = catchAsync(async (req, res, next) => {
+  const { _id: userId } = req.user;
+  const { id: cartItemId } = req.params;
+  const { quantity } = req.body;
+
+  const cart = await Cart.findOne({ user: userId });
+
+  if (!cart) {
+    return next(new ApiError("There is no cart for this user", 404));
+  }
+
+  const itemIndex = cart.cartItems.findIndex((item) => item.id === cartItemId);
+  if (itemIndex > -1) {
+    cart.cartItems[itemIndex].quantity = quantity;
+  } else {
+    return next(new ApiError("There is no cart item with this id", 404));
+  }
+
+  cart.calcTotalPrice();
+  await cart.save();
+
+  res.status(200).send({
+    status: "success",
+    results: cart.cartItems.length,
+    data: cart,
+  });
+});
