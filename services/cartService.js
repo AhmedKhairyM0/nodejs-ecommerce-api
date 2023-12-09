@@ -106,3 +106,32 @@ exports.getCart = catchAsync(async (req, res, next) => {
     data: cart,
   });
 });
+
+/**
+ * @desc    Remove item from cart
+ * @route   DELETE /api/v1/cart/cartItems/:id
+ * @access  Protected/User
+ */
+exports.removeItemFromCart = catchAsync(async (req, res, next) => {
+  const { _id: userId } = req.user;
+  const { id: cartItemId } = req.params;
+  const cart = await Cart.findOneAndUpdate(
+    { user: userId },
+    {
+      $pull: { cartItems: { _id: cartItemId } },
+    },
+    { new: true }
+  );
+
+  if (!cart) {
+    return next(new ApiError("There is no cart for this user", 404));
+  }
+
+  cart.calcTotalPrice();
+  await cart.save();
+
+  res.status(200).send({
+    status: "success",
+    data: cart,
+  });
+});
