@@ -16,11 +16,11 @@ const router = express.Router();
 
 router.use(authService.protect, authService.restrictedTo("user"));
 
-router.route("/").get(getUserWishlist);
-
 router
-  .route("/:productId")
-  .post(addProductToWishlistValidator, addProductToWishlist)
-  .delete(removeProductFromWishlist);
+  .route("/")
+  .get(getUserWishlist)
+  .post(addProductToWishlistValidator, addProductToWishlist);
+
+router.route("/:productId").delete(removeProductFromWishlist);
 
 module.exports = router;

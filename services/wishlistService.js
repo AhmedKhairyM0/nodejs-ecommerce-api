@@ -3,7 +3,7 @@ const User = require("../models/userModel");
 
 exports.addProductToWishlist = catchAsync(async (req, res, next) => {
   const { id } = req.user;
-  const { productId } = req.params;
+  const { productId } = req.body;
 
   const user = await User.findByIdAndUpdate(
     id,

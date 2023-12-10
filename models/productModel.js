@@ -2,6 +2,7 @@ const mongoose = require("mongoose");
 const slugifyPreSave = require("../middlewares/slugifyPreSave");
 
 // name, description, colors, images, price, discountPrice, quantity, brand, category, subcategories, reviews, coupons
+// TODO: add quantity for each different size and color of product [{color, size, quantity}]
 const productSchema = new mongoose.Schema(
   {
     title: {
@@ -37,7 +38,7 @@ const productSchema = new mongoose.Schema(
     },
     sold: {
       type: Number,
-      default: 0, 
+      default: 0,
     },
     ratingsAverage: {
       type: Number,
