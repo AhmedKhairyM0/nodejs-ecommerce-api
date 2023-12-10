@@ -57,14 +57,14 @@ exports.addItemToCart = catchAsync(async (req, res, next) => {
     (item) => item.product.toString() === productId && item.color === color
   );
 
-  // TODO: When does product's quantity decrement?
-
+  
   if (itemIndex > -1) {
     const cartItem = cart.cartItems[itemIndex];
     // cart.totalPrice += product.price * (quantity - cartItem.quantity);
     cartItem.quantity = quantity;
     cart.cartItems[itemIndex] = cartItem;
   } else {
+    // FIXME: Wh
     cart.cartItems.push({
       product: productId,
       color,

@@ -29,7 +29,7 @@ cartSchema.methods.calcTotalPrice = function () {
     (total, item) => total + item.price * item.quantity,
     0
   );
-  this.totalPriceAfterDiscount = undefined;
+    this.totalPriceAfterDiscount = undefined;
 };
 
 module.exports = mongoose.model("Cart", cartSchema);
