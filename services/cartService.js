@@ -10,7 +10,7 @@ const Cart = require("../models/cartModel");
  * @access  Protected/User
  */
 exports.addItemToCart = catchAsync(async (req, res, next) => {
-  const { productId, color, quantity } = req.body;
+  const { productId, color, size, quantity } = req.body;
 
   // 1) Check if the product is exist
   const product = await Product.findById(productId);
@@ -22,42 +22,40 @@ exports.addItemToCart = catchAsync(async (req, res, next) => {
   }
 
   // 2) Check if the available product quantity
-  if (product.quantity < quantity) {
+  const itemStockIndex = product.stock.findIndex((item) => {
+    let available = true;
+    if (color && item.color) available = available && item.color === color;
+    if (size && item.size) available = available && item.size === size;
+
+    return available && +item.quantity >= quantity;
+  });
+  if (itemStockIndex === -1) {
     return next(
       new ApiError(
-        `Not enough product in stock, available product quantity: ${product.quantity}`,
+        `Not enough product in stock, available ${color} ${size} product quantity: ${product.stock[itemStockIndex]}`,
         400
       )
     );
   }
 
-  // 3) Check if the available product colors
-  if (!product.colors.includes(color)) {
-    return next(
-      new ApiError(
-        `Not product with ${color} color, available colors: ${product.colors.join(
-          ", "
-        )}`,
-        400
-      )
-    );
-  }
-
-  // 4) Get Cart of the logged user
+  // 3) Get Cart of the logged user
   const { _id: userId } = req.user;
   let cart = await Cart.findOne({ user: userId });
 
-  // 3) Check if the logged user doesn't have cart, then create new cart
+  // 4) Check if the logged user doesn't have cart, then create new cart
   if (!cart) {
     cart = new Cart({ cartItems: [], totalPrice: 0, user: userId });
   }
 
-  // 4) if user has cart, then add/update items at the cart
-  const itemIndex = cart.cartItems.findIndex(
-    (item) => item.product.toString() === productId && item.color === color
-  );
+  // 5) if user has cart, then add/update items at the cart
+  const itemIndex = cart.cartItems.findIndex((item) => {
+    let available = item.product.toString() === productId;
+    if (item.color && color) available = available && item.color === color;
+    if (item.size && size) available = available && item.size === size;
 
-  
+    return available;
+  });
+
   if (itemIndex > -1) {
     const cartItem = cart.cartItems[itemIndex];
     // cart.totalPrice += product.price * (quantity - cartItem.quantity);
@@ -67,7 +65,8 @@ exports.addItemToCart = catchAsync(async (req, res, next) => {
     // FIXME: Wh
     cart.cartItems.push({
       product: productId,
-      color,
+      color: color || product.stock[itemStockIndex].color,
+      size: size || product.stock[itemStockIndex].size,
       quantity,
       price: product.price,
     });
@@ -208,7 +207,10 @@ exports.applyCoupon = catchAsync(async (req, res, next) => {
 
   const cart = await Cart.findOne({ user: userId });
 
-  cart.totalPriceAfterDiscount = (cart.totalPrice - cart.totalPrice * (coupon.discount / 100)).toFixed(2);
+  cart.totalPriceAfterDiscount = (
+    cart.totalPrice -
+    cart.totalPrice * (coupon.discount / 100)
+  ).toFixed(2);
   await cart.save();
 
   res.status(200).send({
