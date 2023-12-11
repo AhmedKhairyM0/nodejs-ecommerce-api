@@ -3,6 +3,12 @@ const slugifyPreSave = require("../middlewares/slugifyPreSave");
 
 // name, description, colors, images, price, discountPrice, quantity, brand, category, subcategories, reviews, coupons
 // TODO: add quantity for each different size and color of product [{color, size, quantity}]
+const productStockSchema = new mongoose.Schema({
+  size: { type: String, enum: ["S", "M", "L", "XL"] },
+  color: { type: String },
+  quantity: { type: Number, default: 0 },
+});
+
 const productSchema = new mongoose.Schema(
   {
     title: {
@@ -20,7 +26,6 @@ const productSchema = new mongoose.Schema(
       minLength: [10, "Too short product description"],
       maxLength: [1000, "Too long product description"],
     },
-    colors: [String],
     imageCover: {
       type: String,
       required: [true, "Product image cover is required"],
@@ -32,10 +37,7 @@ const productSchema = new mongoose.Schema(
       required: [true, "Product price is required"],
     },
     priceAfterDiscount: Number,
-    quantity: {
-      type: Number,
-      required: [true, "Product quantity is required"],
-    },
+    stock: [productStockSchema],
     sold: {
       type: Number,
       default: 0,

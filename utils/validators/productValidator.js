@@ -60,7 +60,7 @@ exports.createProductValidator = [
       return true;
     }),
 
-  check("quantity").notEmpty().withMessage("Product quantity is required"),
+  // check("quantity").notEmpty().withMessage("Product quantity is required"),
 
   check("sold")
     .optional()
