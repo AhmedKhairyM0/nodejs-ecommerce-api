@@ -60,7 +60,17 @@ exports.createProductValidator = [
       return true;
     }),
 
-  // check("quantity").notEmpty().withMessage("Product quantity is required"),
+  check("stock")
+    .notEmpty()
+    .withMessage("Product Stock is required")
+    .custom((stock) => {
+      stock.forEach((item) => {
+        if (!item.quantity) {
+          throw new Error("Product quantity is required");
+        }
+        return true;
+      });
+    }),
 
   check("sold")
     .optional()
